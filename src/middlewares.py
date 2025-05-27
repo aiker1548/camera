@@ -1,16 +1,13 @@
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi import Request
 
-from src.shared.database import AsyncSessionMaker
-
 class DBSessionMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, session_maker):
+        super().__init__(app)
+        self.session_maker = session_maker
+
     async def dispatch(self, request: Request, call_next):
-        # Генерация уникального ID запроса
-
-        # Создаем сессию для этого запроса и прокидываем её в request.state.db
-        async with AsyncSessionMaker() as session:
-            request.state.db = session  # Прокидываем сессию
-            response = await call_next(request)  # Обрабатываем запрос
-            await session.close()  # Закрываем сессию после запроса
-
+        async with self.session_maker() as session:
+            request.state.db = session
+            response = await call_next(request)
         return response

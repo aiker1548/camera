@@ -2,9 +2,7 @@ import os
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    
-    
-    #posrgres
+    # Postgres
     DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+asyncpg://user:password@localhost:5432/dbname")
     DATABASE_ENGINE_POOL_SIZE: int = 10
     DATABASE_ENGINE_POOL_TIMEOUT: int = 30
@@ -13,9 +11,14 @@ class Settings(BaseSettings):
     DATABASE_ENGINE_POOL_PING: bool = True
     DATABASE_URL_ALT: str = os.getenv("DATABASE_URL_ALT", "")
 
-    class Config:
-        env_file = "../env"  # Путь к файлу .env
+    # JWT settings
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "supersecretkey")
+    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
+    REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7))
 
+    class Config:
+        env_file = "../.env"  # Путь к файлу .env
 
 # Загружаем конфигурацию
 config = Settings()

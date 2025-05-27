@@ -9,3 +9,5 @@ sqlalchemy[asyncio]
 asyncpg
 psycopg2
 jwt
+passlib
+pydantic[email]

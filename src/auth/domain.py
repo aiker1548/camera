@@ -57,14 +57,16 @@ class User:
         email: str,
         password_hash: str,
         fio: str,
-        org: Optional[str] = None
+        id: Optional[uuid.UUID] = None,
+        org: Optional[str] = None,
+        created_at: Optional[datetime] = None
     ):
-        self.id: uuid.UUID = uuid.uuid4()
-        self.email = email         # через EmailDescriptor
+        self.id: uuid.UUID = id or uuid.uuid4()
+        self.email = email         
         self.password_hash: str = password_hash
-        self.fio = fio             # через NonEmptyStringDescriptor
-        self.org = org             # через NonEmptyStringDescriptor
-        self.created_at: datetime = datetime.time()
+        self.fio = fio            
+        self.org = org            
+        self.created_at: datetime = created_at or datetime.now()
 
     def change_password(self, new_password_hash: str):
         """
@@ -83,47 +85,3 @@ class User:
         if org is not None:
             self.org = org
 
-
-# --- VALUE OBJECTS FOR TOKENS ---
-class AccessToken:
-    """
-    Value Object для краткоживущего Access Token.
-
-    Атрибуты:
-        token: строка токена.
-        expires_at: момент истечения.
-    """
-    def __init__(self, token: str, ttl_seconds: int = 3600):  # 1 час по умолчанию
-        if not token or not token.strip():
-            raise ValueError("Access token must be provided")
-        self.token: str = token
-        self.expires_at: datetime = datetime.utcnow() + timedelta(seconds=ttl_seconds)
-
-    def is_expired(self) -> bool:
-        return datetime.time() >= self.expires_at
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, AccessToken):
-            return False
-        return self.token == other.token and self.expires_at == other.expires_at
-
-
-class RefreshToken:
-    """
-    Value Object для долгоживущего Refresh Token.
-
-    См. AccessToken, но с другим TTL.
-    """
-    def __init__(self, token: str, ttl_seconds: int = 7 * 24 * 3600):  # 7 дней
-        if not token or not token.strip():
-            raise ValueError("Refresh token must be provided")
-        self.token: str = token
-        self.expires_at: datetime = datetime.utcnow() + timedelta(seconds=ttl_seconds)
-
-    def is_expired(self) -> bool:
-        return datetime.time() >= self.expires_at
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, RefreshToken):
-            return False
-        return self.token == other.token and self.expires_at == other.expires_at

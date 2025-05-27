@@ -1,16 +1,15 @@
 from typing import Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from src.auth.domain import User as DomainUser
 from src.auth.repositories import IUserRepository
-from src.shared.models import User as ORMUser  # SQLAlchemy model
-from src.shared.database import get_session
-
+from src.shared.models import User as ORMUser 
 
 class UserRepository(IUserRepository):
-    def __init__(self, session: Session = None):
-        self.session = session or get_session()
+    def __init__(self, session: AsyncSession):
+        self.session = session
 
-    def add(self, user: DomainUser) -> None:
+    async def add(self, user: DomainUser) -> None:
         orm_user = ORMUser(
             id=str(user.id),
             email=user.email,
@@ -20,30 +19,34 @@ class UserRepository(IUserRepository):
             created_at=user.created_at
         )
         self.session.add(orm_user)
-        self.session.commit()
+        await self.session.commit()
 
-    def get_by_email(self, email: str) -> Optional[DomainUser]:
-        orm_user = (
-            self.session.query(ORMUser)
-            .filter(ORMUser.email == email.lower())
-            .first()
-        )
+    async def get_by_email(self, email: str) -> Optional[DomainUser]:
+        stmt = select(ORMUser).where(ORMUser.email == email.lower())
+        result = await self.session.execute(stmt)
+        orm_user = result.scalar_one_or_none()
         if not orm_user:
             return None
         return DomainUser(
+            id=orm_user.id,
             email=orm_user.email,
             password_hash=orm_user.password_hash,
             fio=orm_user.fio,
-            org=orm_user.org
+            org=orm_user.org,
+            created_at=orm_user.created_at
         )
 
-    def get_by_id(self, user_id: str) -> Optional[DomainUser]:
-        orm_user = self.session.query(ORMUser).get(user_id)
+    async def get_by_id(self, user_id: str) -> Optional[DomainUser]:
+        stmt = select(ORMUser).where(ORMUser.id == user_id)
+        result = await self.session.execute(stmt)
+        orm_user = result.scalar_one_or_none()
         if not orm_user:
             return None
         return DomainUser(
+            id=orm_user.id,
             email=orm_user.email,
             password_hash=orm_user.password_hash,
             fio=orm_user.fio,
-            org=orm_user.org
+            org=orm_user.org,
+            created_at=orm_user.created_at
         )
