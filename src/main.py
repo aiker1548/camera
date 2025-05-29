@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.auth.routes import router as user_router
+from src.camera.routes import router as camera_router
 from src.middlewares import DBSessionMiddleware
 from src.shared.database import AsyncSessionMaker
 
@@ -15,6 +16,7 @@ def create_app(session_maker=AsyncSessionMaker):
     )
     app.add_middleware(DBSessionMiddleware, session_maker=session_maker)
     app.include_router(user_router, tags=["users"])
+    app.include_router(camera_router)
     return app
 
 app = create_app()

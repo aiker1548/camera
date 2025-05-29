@@ -35,14 +35,12 @@ async def test_register_success(test_app, clean_db):
 async def test_register_duplicate(test_app, clean_db):
     transport = ASGITransport(app=test_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        # Первая регистрация
         await ac.post("/register", json={
             "email": "dupe@example.com",
             "password": "password123",
             "fio": "Test User",
             "org": "TestOrg"
         })
-        # Повторная регистрация с тем же email
         response = await ac.post("/register", json={
             "email": "dupe@example.com",
             "password": "password123",
@@ -56,14 +54,12 @@ async def test_register_duplicate(test_app, clean_db):
 async def test_login_success(test_app, clean_db):
     transport = ASGITransport(app=test_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        # Сначала зарегистрируем пользователя
         await ac.post("/register", json={
             "email": "loginuser@example.com",
             "password": "password123",
             "fio": "Test User",
             "org": "TestOrg"
         })
-        # Теперь логинимся
         response = await ac.post("/login", json={
             "email": "loginuser@example.com",
             "password": "password123"
@@ -77,14 +73,12 @@ async def test_login_success(test_app, clean_db):
 async def test_login_wrong_password(test_app, clean_db):
     transport = ASGITransport(app=test_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        # Зарегистрируем пользователя
         await ac.post("/register", json={
             "email": "wrongpass@example.com",
             "password": "password123",
             "fio": "Test User",
             "org": "TestOrg"
         })
-        # Пытаемся войти с неверным паролем
         response = await ac.post("/login", json={
             "email": "wrongpass@example.com",
             "password": "wrongpassword"
@@ -96,7 +90,6 @@ async def test_login_wrong_password(test_app, clean_db):
 async def test_refresh_success(test_app, clean_db):
     transport = ASGITransport(app=test_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        # Зарегистрируем и залогинимся
         await ac.post("/register", json={
             "email": "refreshuser@example.com",
             "password": "password123",
@@ -108,7 +101,6 @@ async def test_refresh_success(test_app, clean_db):
             "password": "password123"
         })
         refresh_token = login_resp.json()["refresh_token"]
-        # Обновляем токен
         response = await ac.post("/refresh", json={
             "refresh_token": refresh_token
         })

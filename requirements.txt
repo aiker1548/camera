@@ -11,3 +11,4 @@ psycopg2
 jwt
 passlib
 pydantic[email]
+geoalchemy2
