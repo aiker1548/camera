@@ -2,8 +2,9 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy import text
-from src.shared.database import Base
-from src.main import create_app
+
+from src.infrastructure.data.postgres.base import Base
+from src.presentation.api.routes.main import create_app
 
 @pytest_asyncio.fixture
 async def clean_db(test_session_maker):
