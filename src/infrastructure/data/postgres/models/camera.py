@@ -1,12 +1,12 @@
 from sqlalchemy import Column, String, Float, Integer, Boolean, DateTime
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
 
 from src.infrastructure.data.postgres.base import Base
 
-class CameraModel(Base):
+class Camera(Base):
     __tablename__ = "d_camera"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, comment="Идентификатор камеры")
@@ -25,3 +25,5 @@ class CameraModel(Base):
     archive = Column(Boolean, default=False, comment="Признак архивной записи")
     azimuth = Column(Integer, comment="Азимут")
     process_dttm = Column(DateTime, default=datetime.utcnow, comment="Дата и время добавления записи")
+
+    videos = relationship("Video", back_populates="camera")

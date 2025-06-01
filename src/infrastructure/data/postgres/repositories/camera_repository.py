@@ -3,7 +3,7 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 
-from src.infrastructure.data.postgres.models.camera import CameraModel
+from src.infrastructure.data.postgres.models.camera import Camera as CameraModel
 from src.domain.camera.entities.camera import Camera
 from src.application.camera.interfaces.persistence.repo import AbstractCameraRepository
 
@@ -13,6 +13,7 @@ class PostgresCameraRepository(AbstractCameraRepository):
 
     async def get_all(self, **filters) -> List[Camera]:
         query = select(CameraModel)
+        
         for key, value in filters.items():
             if key == 'name':
                 query = query.where(CameraModel.camera_name.ilike(f"%{value}%"))

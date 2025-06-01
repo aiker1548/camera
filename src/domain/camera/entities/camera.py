@@ -5,7 +5,7 @@ import uuid
 from src.domain.value_objects.camera.latitube import LatitudeDescriptor
 from src.domain.value_objects.camera.longitude import LongitudeDescriptor
 from src.domain.value_objects.camera.string import NonEmptyStringDescriptor
-from src.infrastructure.data.postgres.models.camera import CameraModel
+from src.infrastructure.data.postgres.models.camera import Camera as CameraModel
 
 
 class Camera:
