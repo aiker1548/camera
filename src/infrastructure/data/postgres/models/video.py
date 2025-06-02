@@ -29,3 +29,4 @@ class Video(Base):
 
     upload_time = Column(DateTime, default=datetime.utcnow)
     preview_url = Column(String)
+

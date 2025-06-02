@@ -1,30 +1,49 @@
 from uuid import UUID
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, func
+from sqlalchemy.orm import aliased, joinedload
 
 from src.infrastructure.data.postgres.models.camera import Camera as CameraModel
+from src.infrastructure.data.postgres.models.video import Video 
 from src.domain.camera.entities.camera import Camera
 from src.application.camera.interfaces.persistence.repo import AbstractCameraRepository
+from src.application.camera.dto.filters import CameraFilters
+from src.domain.video.entities.video import Video as VideoDomain
 
 class PostgresCameraRepository(AbstractCameraRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_all(self, **filters) -> List[Camera]:
-        query = select(CameraModel)
+    async def get_all(self, filters: CameraFilters) -> List[Camera]:
+        # Создаем запрос с жадной загрузкой видео
+        query = select(CameraModel).options(joinedload(CameraModel.videos))
+
+        # Применение фильтров
+        if filters.camera_id__subtext is not None:
+            query = query.where(CameraModel.camera_id.ilike(f"%{filters.camera_id__subtext}%"))
+        if filters.camera_place__subtext is not None:
+            query = query.where(CameraModel.camera_place.ilike(f"%{filters.camera_place__subtext}%"))
+        if filters.camera_model__in != []:
+            query = query.where(CameraModel.model.in_(filters.camera_model__in))
+        if filters.camera_type__in != []:
+            query = query.where(CameraModel.camera_type.in_(filters.camera_type__in))
+        if filters.camera_class__in != []:
+            query = query.where(CameraModel.camera_class.in_(filters.camera_class__in))
         
-        for key, value in filters.items():
-            if key == 'name':
-                query = query.where(CameraModel.camera_name.ilike(f"%{value}%"))
-            elif key == 'type':
-                query = query.where(CameraModel.camera_type.ilike(f"%{value}%"))
-            elif key == 'class_':
-                query = query.where(CameraModel.camera_class.ilike(f"%{value}%"))
-            elif key == 'model':
-                query = query.where(CameraModel.model.ilike(f"%{value}%"))
+        # Фильтры по количеству видео
+        if (filters.count_videos__le is not None) or (filters.count_videos__ge is not None):
+            video_alias = aliased(Video)
+            query = query.outerjoin(video_alias, CameraModel.videos)
+            query = query.group_by(CameraModel.id)
+            if filters.count_videos__le is not None:
+                query = query.having(func.count(video_alias.id) <= filters.count_videos__le)
+            if filters.count_videos__ge is not None:
+                query = query.having(func.count(video_alias.id) >= filters.count_videos__ge)
+
+        # Выполнение запроса
         result = await self.session.execute(query)
-        models = result.scalars().all()
+        models = result.unique().scalars().all() 
         return [self._to_domain(m) for m in models]
 
     async def get_by_id(self, camera_id: UUID) -> Optional[Camera]:
@@ -32,6 +51,7 @@ class PostgresCameraRepository(AbstractCameraRepository):
             select(CameraModel).where(CameraModel.id == camera_id)
         )
         model = result.scalar_one_or_none()
+        await self.session.refresh(model, attribute_names=["videos"])
         return self._to_domain(model) if model else None
 
     async def create(self, camera: Camera) -> Camera:
@@ -39,6 +59,7 @@ class PostgresCameraRepository(AbstractCameraRepository):
         self.session.add(model)
         await self.session.commit()
         await self.session.refresh(model)
+        await self.session.refresh(model, attribute_names=["videos"])
         return self._to_domain(model)
 
     async def delete(self, camera_id: UUID) -> None:
@@ -79,6 +100,7 @@ class PostgresCameraRepository(AbstractCameraRepository):
                     model.azimuth = value
             await self.session.commit()
             await self.session.refresh(model)
+            await self.session.refresh(model, attribute_names=["videos"])
             return self._to_domain(model)
         return None
 
@@ -100,4 +122,6 @@ class PostgresCameraRepository(AbstractCameraRepository):
             archive=model.archive,
             azimuth=model.azimuth,
             process_dttm=model.process_dttm,
+            videos=[VideoDomain.from_orm(v) for v in model.videos]
         )
+    

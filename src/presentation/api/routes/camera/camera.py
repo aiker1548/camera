@@ -1,60 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
-from typing import List
 
 from src.application.camera.dto.camera import CameraCreate, CameraRead, CameraUpdate
 from src.di.cameras.service import CameraService
 from src.domain.camera.entities.camera import Camera
 from src.presentation.api.routes.camera.dependencies.camera_dep import get_service
+from src.presentation.api.routes.camera.cameras_paramns  import FilterCamerasParams
 
 router = APIRouter(prefix="/cameras", tags=["Cameras"])
 
 
-@router.get("/", response_model=List[CameraRead])
-async def list_cameras(
-    name: str | None = None,
-    type: str | None = None,
-    class_: str | None = None,
-    model: str | None = None,
+@router.get("/geojson", response_model=dict)
+async def get_cameras_geojson(
+    filter_params: FilterCamerasParams = Depends(),
     service: CameraService = Depends(get_service)
 ):
-    filters = {}
-    if name:
-        filters["name"] = name
-    if type:
-        filters["type"] = type
-    if class_:
-        filters["class_"] = class_
-    if model:
-        filters["model"] = model
-    return await service.list_cameras(**filters)
+    
+    filters = filter_params.build_camera_filters()
+    return await service.get_cameras_geojson(filters)
 
-@router.get("/geojson", response_model=dict)
-async def get_cameras_geojson(service: CameraService = Depends(get_service)):
-    cameras = await service.list_cameras()
-    features = []
-    for camera in cameras:
-        feature = {
-            "type": "Feature",
-            "properties": {
-                "camera_id": camera.camera_id,        
-                "has_video": False
-            },
-            "geometry": {
-                "type": "Point",
-                "coordinates": [
-                    camera.camera_longitude,           
-                    camera.camera_latitude             
-                ]
-            }
-        }
-        features.append(feature)
-
-    return {
-        "type": "FeatureCollection",
-        "features": features
-    }
 
 @router.get("/{camera_id}", response_model=CameraRead)
 async def get_camera(camera_id: UUID, service: CameraService = Depends(get_service)):

@@ -11,4 +11,4 @@ class CameraFilters:
     camera_model__in: list[str] 
     camera_type__in: list[str] 
     camera_class__in: list[str] 
-    district_id__in: list[str] 
+

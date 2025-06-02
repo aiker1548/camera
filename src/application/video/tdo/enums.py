@@ -2,12 +2,12 @@ from enum import Enum as PyEnum
 
 
 class TimeOfDay(PyEnum):
-    MORNING = "Утро"
-    DAY = "День"
-    EVENING = "Вечер"
-    NIGHT = "Ночь"
-
+    MORNING = "MORNING"
+    DAY = "DAY"
+    EVENING = "EVENING"
+    NIGHT = "NIGHT"
+    
 class TracingStatus(PyEnum):
-    DONE = "Done"
-    RUN = "Run"
-    ERROR = "Error"
+    DONE = "DONE"
+    RUN = "RUN"
+    ERROR = "ERROR"

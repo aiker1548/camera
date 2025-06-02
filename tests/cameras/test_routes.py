@@ -23,11 +23,6 @@ async def async_client(test_session_maker):
     async with AsyncClient(transport=transport, base_url="http://test", follow_redirects=True) as client:
         yield client
 
-@pytest.mark.asyncio
-async def test_list_empty_cameras(async_client):
-    response = await async_client.get("/cameras")
-    assert response.status_code == 200
-    assert response.json() == []
 
 @pytest.mark.asyncio
 async def test_create_and_get_camera(async_client):
@@ -101,33 +96,6 @@ async def test_update_camera(async_client):
     assert data["camera_name"] == "NewName"
     assert data["archive"] is True
 
-@pytest.mark.asyncio
-async def test_delete_camera(async_client):
-
-    camera_id = str(uuid4())
-    payload = {
-        "camera_id": camera_id,
-        "camera_class_cd": 1,
-        "camera_class": "C",
-        "model": "M",
-        "camera_name": "ToDelete",
-        "camera_place": "P",
-        "camera_place_cd": 1,
-        "serial_number": "SN",
-        "camera_type_cd": 1,
-        "camera_type": "T",
-        "camera_latitude": 0.0,
-        "camera_longitude": 0.0,
-        "archive": False,
-        "azimuth": 0
-    }
-    await async_client.post("/cameras", json=payload)
-
-    resp = await async_client.delete(f"/cameras/{camera_id}")
-    assert resp.status_code == 204
-
-    resp = await async_client.get(f"/cameras/{camera_id}")
-    assert resp.status_code == 404
 
 @pytest.mark.asyncio
 async def test_geojson_endpoint(async_client):

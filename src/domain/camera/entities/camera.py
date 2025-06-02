@@ -6,6 +6,7 @@ from src.domain.value_objects.camera.latitube import LatitudeDescriptor
 from src.domain.value_objects.camera.longitude import LongitudeDescriptor
 from src.domain.value_objects.camera.string import NonEmptyStringDescriptor
 from src.infrastructure.data.postgres.models.camera import Camera as CameraModel
+from typing import List, Any
 
 
 class Camera:
@@ -28,6 +29,7 @@ class Camera:
     archive: bool = False
     azimuth: Optional[int] = None
     process_dttm: Optional[datetime] = None
+    videos: List["Video"] = []
 
     def __init__(
         self,
@@ -47,6 +49,7 @@ class Camera:
         archive: bool = False,
         azimuth: Optional[int] = None,
         process_dttm: Optional[datetime] = None,
+        videos: List["Video"] = []
     ):
         self.id = id or uuid.uuid4()
         self.camera_id = camera_id or ""
@@ -64,6 +67,8 @@ class Camera:
         self.archive = archive
         self.azimuth = azimuth
         self.process_dttm = process_dttm or datetime.now()
+        self.videos = videos
+
 
     @classmethod
     def from_orm(cls, orm_obj: CameraModel) -> "Camera":
