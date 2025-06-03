@@ -12,3 +12,7 @@ jwt
 passlib
 pydantic[email]
 geoalchemy2
+minio
+pika
+dependency_injector
+moviepy

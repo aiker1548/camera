@@ -2,7 +2,7 @@ from uuid import UUID
 from datetime import datetime, timedelta
 from pydantic import BaseModel
 
-from src.application.video.tdo.enums import TimeOfDay, TracingStatus
+from src.application.video.dto.enums import TimeOfDay, TracingStatus
 
 
 class Video(BaseModel):

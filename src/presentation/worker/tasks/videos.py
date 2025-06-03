@@ -1,100 +1,146 @@
-# import functools
-# import json
-# import traceback
-
-# import dramatiq
-# from dependency_injector.wiring import inject
-# from dramatiq import middleware
-# from dramatiq.brokers.rabbitmq import RabbitmqBroker
-
-# from application.video.commands.ML import start_video_processing
-# from application.video.commands.ML.start_video_processing import StartVideoProcessingCommand
-# from application.video.commands.validate_video_command import ValidateVideoCommand
-# from di.videos import VideosContainer
-# from infrastructure.integration_events.videos import \
-#     VideoFileCreatedIntegrationEvent, StartVideoProcessingIntegrationEvent
-# from settings import Settings
-# from shared_kernel.building_blocks.application.mediator import Mediator
-# from shared_kernel.loggers.main import get_presentation_logger
-
-# # Logger
-# logger = get_presentation_logger()
+import json
+import asyncio
+from pathlib import Path
+from uuid import UUID
 
 
-# def log_actor_exceptions(func):
-#     @functools.wraps(func)
-#     async def wrapper(*args, **kwargs):
-#         try:
-#             return await func(*args, **kwargs)
-#         except Exception:
-#             logger.critical(
-#                 f"Exception in actor '{func.__name__}':\n{traceback.format_exc()}"
-#             )
-#             # raise
+from pika.adapters.asyncio_connection import AsyncioConnection
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-#     return wrapper
+from moviepy.video.io.VideoFileClip import VideoFileClip
+
+from src.infrastructure.data.postgres.repositories.video_repository import PostgresVideoRepository
+from src.shared_kernel.config import config 
+from src.infrastructure.data.minio.base import minio_client
+from src.infrastructure.data.postgres.base import AsyncSessionMaker
+from src.infrastructure.data.rabbitmq.base import RABBIT_PARAMS
 
 
-# # Broker
-# rabbitmq_broker = RabbitmqBroker(
-#     url=f"{Settings().rabbitmq.url}?heartbeat=0",
-# )
-
-# rabbitmq_broker.add_middleware(middleware.asyncio.AsyncIO())
-# dramatiq.set_broker(rabbitmq_broker)
+asyncio_conn: AsyncioConnection | None = None
 
 
-# # Heavy workers
-# @dramatiq.actor(queue_name="cpu-bound_queue", time_limit=120 * 60 * 1_000)
-# @inject
-# @log_actor_exceptions
-# async def validate_video(
-#         event_data: dict,
-#         mediator: Mediator = VideosContainer.mediator(),
-# ):
-#     command = ValidateVideoCommand(
-#         event_data.get("file_id"),
-#         event_data.get("camera_id"),
-#         event_data.get("file_path"),
-#     )
-#     await mediator.send(command, context="video")
+async def process_video_message(body: bytes):
+    data = json.loads(body)
+    video_id = data["video_id"]
+    object_name = data["object_name"]
+
+    print(f"[Consumer] Received task for video_id = {video_id}")
+
+    temp_dir = Path("/tmp")
+    temp_dir.mkdir(exist_ok=True)
+
+    local_video_path = temp_dir / object_name
+
+    try:
+        minio_client.fget_object(config.MINIO_VIDEO_BUCKET, object_name, str(local_video_path))
+    except Exception as e:
+        print(f"[Consumer] Ошибка скачивания видео {video_id}: {e}")
+        async with AsyncSessionMaker() as session:
+            repo = PostgresVideoRepository(session)
+            await repo.update_processing_status(UUID(video_id), "Error")
+        return
+
+    try:
+        with VideoFileClip(str(local_video_path)) as clip:
+            duration = clip.duration
+            width, height = clip.size
+            fps = clip.fps
+            time_of_day = "DAY" if fps >= 24 else "NIGHT"
+
+            preview_filename = f"preview-{video_id}.jpg"
+            preview_local_path = temp_dir / preview_filename
+            clip.save_frame(str(preview_local_path), t=0.0)
+
+        if not minio_client.bucket_exists(config.MINIO_PREVIEW_BUCKET):
+            minio_client.make_bucket(config.MINIO_PREVIEW_BUCKET)
+
+        minio_client.fput_object(
+            bucket_name=config.MINIO_PREVIEW_BUCKET,
+            object_name=preview_filename,
+            file_path=str(preview_local_path),
+            content_type="image/jpeg"
+        )
+        preview_url = f"{config.MINIO_PREVIEW_BUCKET}/{preview_filename}"
+
+    except Exception as exc:
+        print(f"[Consumer] Ошибка при обработке видео {video_id}: {exc}")
+        async with AsyncSessionMaker() as session:
+            repo = PostgresVideoRepository(session)
+            await repo.update_processing_status(UUID(video_id), "Error")
+        local_video_path.unlink(missing_ok=True)
+        return
+
+    async with AsyncSessionMaker() as session:
+        repo = PostgresVideoRepository(session)
+        video = await repo.get_by_id(UUID(video_id))
+        if video:
+            video.duration = duration
+            video.resolution_width = width
+            video.resolution_height = height
+            video.fps = fps
+            video.time_of_day = time_of_day
+            video.tracing = "DONE"
+            video.preview_url = preview_url
+
+            await repo.update(video)
+            await repo.update_processing_status(UUID(video_id), "DONE")
+        else:
+            print(f"[Consumer] Видео {video_id} не найдено в БД")
+
+    local_video_path.unlink(missing_ok=True)
+    preview_local_path.unlink(missing_ok=True)
+
+    print(f"[Consumer] Finished processing video_id = {video_id}")
 
 
-# @dramatiq.actor(queue_name="cpu-bound_queue", time_limit=120 * 60 * 1_000)
-# @inject
-# @log_actor_exceptions
-# async def start_video_processing(
-#         event_data: dict,
-#         mediator: Mediator = VideosContainer.mediator(),
-# ):
-#     command = StartVideoProcessingCommand(
-#         event_data.get("task_id"),
-#         event_data.get("video_path"),
-#         event_data.get("first_frame_path"),
-#     )
-#     await mediator.send(command, context="video")
+def start_video_consumer():
+    """
+    Инициализирует AsyncioConnection и подписку на очередь.
+    Не блокирует, поскольку работа идёт в том же asyncio-loop, что и FastAPI.
+    """
+    global asyncio_conn
+
+    def on_connection_open(connection):
+        # вызывается, когда соединение успешно открылось
+        print("[Consumer] AsyncioConnection open")
+        connection.channel(on_open_callback=on_channel_open)
+
+    def on_channel_open(ch):
+        print("[Consumer] Channel open, declaring queue")
+        global channel  
+        channel = ch
+        channel.queue_declare(
+            queue=config.RABBIT_QUEUE_VIDEO_TASKS,
+            durable=True,
+            callback=on_queue_declared
+        )
+
+    # В on_queue_declared
+    def on_queue_declared(frame):
+        print(f"[Consumer] Queue declared: {config.RABBIT_QUEUE_VIDEO_TASKS}")
+        channel.basic_qos(prefetch_count=1)
+        channel.basic_consume(
+            queue=config.RABBIT_QUEUE_VIDEO_TASKS,
+            on_message_callback=on_message
+        )
+
+    def on_message(channel, method, properties, body):
+        # На каждое сообщение создаём таск для async-обработчика
+        print(f"[Consumer] Received message: {body.decode()}")
+        asyncio.create_task(process_video_message(body))
+        channel.basic_ack(delivery_tag=method.delivery_tag)
+
+    asyncio_conn = AsyncioConnection(
+        parameters=RABBIT_PARAMS,
+        on_open_callback=on_connection_open
+    )
 
 
-# # Listnere handlers
-# listeners: dict[str, tuple[dramatiq.Actor]] = {
-#     VideoFileCreatedIntegrationEvent.__name__: (validate_video,),
-#     StartVideoProcessingIntegrationEvent.__name__: (start_video_processing,),
-# }
-
-
-# @dramatiq.actor(queue_name="lite_queue")
-# def handler_events(event_body):
-#     logger.debug(f"handler_events received: {event_body}")
-#     try:
-#         event: dict = json.loads(event_body)
-#         event_name = event.get("event_type")
-#         if event_name not in listeners:
-#             logger.error("Unexpected Event: " + event_name)
-#             return
-
-#         for listener in listeners[event_name]:
-#             listener.send(event)
-#     except json.JSONDecodeError as e:
-#         logger.exception(f"Decoding JSON error: {e}")
-#     except Exception:
-#         logger.critical("Event error:\n" + traceback.format_exc())
+def stop_video_consumer():
+    """
+    Закрывает AsyncioConnection (вызывается при shutdown).
+    """
+    global asyncio_conn
+    if asyncio_conn and not asyncio_conn.is_closed:
+        asyncio_conn.close()
+        print("[Consumer] Connection closed")
