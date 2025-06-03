@@ -1,9 +1,5 @@
-# src/infrastructure/data/postgres/models/video_analysis.py
-
-import sqlalchemy as sa
-from sqlalchemy import Column, Integer, DateTime, ForeignKey, String, JSON, Enum
+from sqlalchemy import Column, DateTime, ForeignKey, String, JSON, Enum
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship, mapped_column, Mapped
 import uuid 
 from datetime import datetime
 

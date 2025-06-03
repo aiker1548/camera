@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
+
 from src.domain.auth.entities.user import User as DomainUser
 
 class IUserRepository(ABC):

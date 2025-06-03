@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
-from uuid import UUID
 from typing import Optional
 from datetime import datetime
+
+from pydantic import BaseModel, Field
+from uuid import UUID
 
 class CameraBase(BaseModel):
     camera_id: Optional[str] = Field(None, description="Номер камеры")

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from uuid import UUID
 from typing import List, Optional
+
+from uuid import UUID
 
 from src.domain.camera.entities.camera import Camera
 

@@ -1,6 +1,6 @@
-import dataclasses
 from datetime import datetime
 from typing import Optional
+
 import uuid
 
 from src.domain.value_objects.auth.email import EmailDescriptor

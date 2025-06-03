@@ -1,8 +1,6 @@
 from uuid import UUID
 from datetime import datetime, timedelta
-from enum import Enum
 from pydantic import BaseModel
-from typing import Optional
 
 from src.application.video.tdo.enums import TimeOfDay, TracingStatus
 
