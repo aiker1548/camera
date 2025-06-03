@@ -81,6 +81,7 @@ async def process_video_message(body: bytes):
             video.time_of_day = time_of_day
             video.tracing = "DONE"
             video.preview_url = preview_url
+            video.counter += 1
 
             await repo.update(video)
             await repo.update_processing_status(UUID(video_id), "DONE")
