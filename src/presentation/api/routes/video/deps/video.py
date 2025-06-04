@@ -1,8 +1,8 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.di.video.service import VideoService
-from src.di.video.storage_service import VideoStorageService
+from src.application.video.service.service import VideoService
+from src.application.video.service.storage_service import VideoStorageService
 from src.infrastructure.data.postgres.repositories.video_repository import PostgresVideoRepository
 from src.presentation.api.routes.tools.dependencies.tools_dep import get_async_session
 from src.infrastructure.data.minio.base import get_minio_client

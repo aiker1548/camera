@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from uuid import UUID
 
 from src.application.camera.dto.camera import CameraCreate, CameraRead, CameraUpdate
-from src.di.cameras.service import CameraService
+from src.application.camera.service.service import CameraService
 from src.domain.camera.entities.camera import Camera
 from src.presentation.api.routes.camera.dependencies.camera_dep import get_service
 from src.presentation.api.routes.camera.cameras_paramns  import FilterCamerasParams

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from src.di.auth.services import AuthService
+from src.application.auth.service.services import AuthService
 from src.application.auth.dto.auth_dto import UserCreate, LoginRequest
 from src.application.auth.dto.token_dto import TokenPair, TokenRefresh
 from src.presentation.api.routes.auth.dependencies.auth_dep import get_auth_service

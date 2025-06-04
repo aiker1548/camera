@@ -2,7 +2,7 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.di.cameras.service import CameraService
+from src.application.camera.service.service import CameraService
 from src.infrastructure.data.postgres.repositories.camera_repository import PostgresCameraRepository
 from src.presentation.api.routes.tools.dependencies.tools_dep import get_async_session
 

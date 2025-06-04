@@ -3,8 +3,8 @@ from uuid import UUID
 
 from src.application.video.dto.video_filters import VideoFiltersDTO
 from src.application.video.dto.pagination import PaginationParams 
-from src.di.video.storage_service import VideoStorageService
-from src.di.video.service import VideoService
+from src.application.video.service.storage_service import VideoStorageService
+from src.application.video.service.service import VideoService
 from src.presentation.api.routes.video.deps.video import get_video_storage_service
 from src.presentation.api.routes.video.deps.video import get_video_service
 

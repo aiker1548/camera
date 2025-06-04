@@ -3,7 +3,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.infrastructure.data.postgres.repositories.user_repository import UserRepository
-from src.di.auth.services import AuthService
+from src.application.auth.service.services import AuthService
 from src.presentation.api.routes.tools.dependencies.tools_dep import get_async_session
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/signin")

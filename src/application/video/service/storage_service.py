@@ -8,7 +8,7 @@ from pika import BasicProperties as PikaBasicProperties
 import json
 
 from src.application.video.dto.video import CreateVideoDTO
-from src.di.video.service import VideoService
+from src.application.video.service.service import VideoService
 from src.application.video.dto.enums import TracingStatus
 from src.shared_kernel.config import config
 
