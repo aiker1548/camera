@@ -1,8 +1,12 @@
 from fastapi import APIRouter, Depends, UploadFile, Form
 from uuid import UUID
-from src.di.video.storage_service import VideoStorageService
 
-from src.presentation.api.routes.video.deps.video import get_video_storage_service 
+from src.application.video.dto.video_filters import VideoFiltersDTO
+from src.application.video.dto.pagination import PaginationParams 
+from src.di.video.storage_service import VideoStorageService
+from src.di.video.service import VideoService
+from src.presentation.api.routes.video.deps.video import get_video_storage_service
+from src.presentation.api.routes.video.deps.video import get_video_service
 
 router = APIRouter(prefix="/videos", tags=["Videos"])
 
@@ -15,3 +19,18 @@ async def upload_video(
 ):
     video_id = await storage_service.upload_file_and_enqueue(file, camera_id, author_id)
     return {"video_id": video_id}
+
+
+@router.get("/")
+async def get_videos(
+    video_params: VideoFiltersDTO = Depends(VideoFiltersDTO.as_query_dep),
+    pagination: PaginationParams = Depends(),
+    video_service: VideoService = Depends(get_video_service)
+):
+    videos, total_count = await video_service.list_videos(filters=video_params, pagination=pagination)
+    return {
+        "videos": videos,
+        "total_count": total_count,
+        "pagination": pagination.to_dict()
+    }
+    

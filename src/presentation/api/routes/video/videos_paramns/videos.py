@@ -6,7 +6,7 @@
 # from pydantic import Field
 
 # from application.video.interfaces.persistence.reader import VideoFilters, VideoProgressedFilters
-# from shared_kernel.building_blocks.domain.enums import TimeOfDay, TracingStatus, AnalysisType
+# from src.application.video.dto.enums import TimeOfDay, TracingStatus, AnalysisType
 
 
 # class FilterVideosParams(BaseModel):
@@ -41,7 +41,6 @@
 #     owner_fullname_or_email__subtext: str | None = Query(None,
 #                                                          description="Фильтр по ФИО или email пользователя")
 #     video_id__eq: uuid.UUID | None = Query(None)
-#     analysis_type__in: list[AnalysisType] | None = Field(Query(None))
 #     time_of_day__in: list[TimeOfDay] | None = Field(Query(None))
 #     duration__le: int | None = Query(None)
 #     duration__ge: int | None = Query(None)
@@ -53,7 +52,6 @@
 #             video_name__subtext=self.video_name__subtext,
 #             owner_fullname_or_email__subtext=self.owner_fullname_or_email__subtext,
 #             video_id__eq=self.video_id__eq,
-#             analysis_type__in=self.analysis_type__in,
 #             time_of_day__in=self.time_of_day__in,
 #             duration__le=self.duration__le,
 #             duration__ge=self.duration__ge,

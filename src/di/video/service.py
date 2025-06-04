@@ -7,6 +7,7 @@ from src.application.video.dto.video_filters import VideoFiltersDTO
 from src.application.video.dto.pagination import PaginationParams
 from src.domain.video.entities.video import Video as VideoDomain
 from src.application.video.dto.video import CreateVideoDTO
+from src.application.video.dto.enums import TimeOfDay, TracingStatus
 
 
 class VideoService:
@@ -31,8 +32,8 @@ class VideoService:
             resolution_width=dto.resolution_width or 0,
             resolution_height=dto.resolution_height or 0,
             fps=dto.fps or 0,
-            time_of_day=dto.time_of_day or "DAY",
-            tracing=dto.tracing or "RUN",
+            time_of_day=self.time_of_day(),
+            tracing=dto.tracing or TracingStatus.RUN,
             counter=0,
             author_id=dto.author_id,
             camera_id=dto.camera_id,
@@ -72,3 +73,14 @@ class VideoService:
 
     async def delete_video(self, video_id: UUID) -> None:
         await self._repo.delete(video_id)
+
+    @staticmethod
+    def time_of_day() -> TimeOfDay:
+        if datetime.now().hour >= 12 and datetime.now().hour < 18:
+            return TimeOfDay.DAY
+        elif datetime.now().hour >= 18 and datetime.now().hour < 23:
+            return TimeOfDay.EVENING
+        elif datetime.now().hour >= 23 and datetime.now().hour < 6:
+            return TimeOfDay.NIGHT
+        elif datetime.now().hour >= 6 and datetime.now().hour < 12:
+            return TimeOfDay.MORNING

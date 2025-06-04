@@ -3,6 +3,7 @@ from sqlalchemy import select, update, delete, func
 from uuid import UUID, uuid4
 from typing import List, Optional, Tuple
 from datetime import timedelta
+from urllib.parse import urljoin
 
 from src.application.video.interfaces.repo import AbstractVideoRepository
 from src.domain.video.entities.video import Video as VideoDomain
@@ -10,6 +11,8 @@ from src.infrastructure.data.postgres.models.video import Video as VideoModel
 from src.infrastructure.data.postgres.models.VideoProcessingQueue import VideoProcessingQueue
 from src.application.video.dto.video_filters import VideoFiltersDTO
 from src.application.video.dto.pagination import PaginationParams
+from src.application.video.dto.enums import TimeOfDay, TracingStatus
+from src.shared_kernel.config import config
 
 
 class PostgresVideoRepository(AbstractVideoRepository):
@@ -101,7 +104,7 @@ class PostgresVideoRepository(AbstractVideoRepository):
             .where(VideoModel.id == video.id)
             .values(
                 name=video.name,
-                duration=timedelta(seconds=video.duration) ,
+                duration=timedelta(seconds=video.duration),
                 resolution_width=video.resolution_width,
                 resolution_height=video.resolution_height,
                 fps=video.fps,
@@ -162,5 +165,5 @@ class PostgresVideoRepository(AbstractVideoRepository):
             author_id=model.author_id,
             camera_id=model.camera_id,
             upload_time=model.upload_time,
-            preview_url=model.preview_url,
+            preview_url=config.MINIO_ENDPOINT + '/' + model.preview_url,
         )

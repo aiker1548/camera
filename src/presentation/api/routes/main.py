@@ -13,7 +13,7 @@ from src.shared_kernel.config import config
 from src.presentation.worker.tasks.videos import start_video_consumer
 
 
-def create_app():
+def create_app(session_maker=AsyncSessionMaker):
     # ----------------------------------------
     # 1. Устанавливаем SQLAlchemy-движок (через Middleware)
     # ----------------------------------------
@@ -34,12 +34,12 @@ def create_app():
     # ----------------------------------------
     # 3. DBSessionMiddleware (создаёт AsyncSession на каждый запрос)
     # ----------------------------------------
-    app.add_middleware(DBSessionMiddleware, session_maker=AsyncSessionMaker)
+    app.add_middleware(DBSessionMiddleware, session_maker=session_maker)
 
     # ----------------------------------------
     # 4. Подключаем роутеры
     # ----------------------------------------
-    app.include_router(user_router, tags=["users"])
+    app.include_router(user_router, tags=["/users"])
     app.include_router(camera_router, prefix="/cameras", tags=["Cameras"])
     app.include_router(video_router, tags=["Videos"])
 

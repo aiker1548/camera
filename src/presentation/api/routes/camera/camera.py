@@ -7,7 +7,7 @@ from src.domain.camera.entities.camera import Camera
 from src.presentation.api.routes.camera.dependencies.camera_dep import get_service
 from src.presentation.api.routes.camera.cameras_paramns  import FilterCamerasParams
 
-router = APIRouter(prefix="/cameras", tags=["Cameras"])
+router = APIRouter(tags=["Cameras"])
 
 
 @router.get("/geojson", response_model=dict)

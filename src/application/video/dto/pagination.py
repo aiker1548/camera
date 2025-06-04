@@ -17,3 +17,19 @@ class PaginationParams:
         self.limit = limit
         self.sort_by = sort_by
         self.sort_desc = sort_desc
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "PaginationParams":
+        return cls(
+            offset=data.get("offset", 0),
+            limit=data.get("limit", 10),
+            sort_by=data.get("sort_by"),
+            sort_desc=data.get("sort_desc", False),
+        )
+    def to_dict(self) -> dict:
+        return {
+            "offset": self.offset,
+            "limit": self.limit,
+            "sort_by": self.sort_by,
+            "sort_desc": self.sort_desc,
+        }

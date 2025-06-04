@@ -14,6 +14,7 @@ from src.shared_kernel.config import config
 from src.infrastructure.data.minio.base import minio_client
 from src.infrastructure.data.postgres.base import AsyncSessionMaker
 from src.infrastructure.data.rabbitmq.base import RABBIT_PARAMS
+from src.application.video.dto.enums import TracingStatus
 
 
 asyncio_conn: AsyncioConnection | None = None
@@ -45,7 +46,6 @@ async def process_video_message(body: bytes):
             duration = clip.duration
             width, height = clip.size
             fps = clip.fps
-            time_of_day = "DAY" if fps >= 24 else "NIGHT"
 
             preview_filename = f"preview-{video_id}.jpg"
             preview_local_path = temp_dir / preview_filename
@@ -78,8 +78,7 @@ async def process_video_message(body: bytes):
             video.resolution_width = width
             video.resolution_height = height
             video.fps = fps
-            video.time_of_day = time_of_day
-            video.tracing = "DONE"
+            video.tracing = TracingStatus.DONE
             video.preview_url = preview_url
             video.counter += 1
 
