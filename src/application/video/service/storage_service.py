@@ -93,5 +93,5 @@ class VideoStorageService:
         except Exception as e:
             raise HTTPException(status_code=500, detail="Ошибка при отправке в очередь")
 
-        return created_video.id
+        return {"video_id": created_video.id}
 

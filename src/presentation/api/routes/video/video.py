@@ -18,7 +18,7 @@ async def upload_video(
     storage_service: VideoStorageService = Depends(get_video_storage_service),
 ):
     video_id = await storage_service.upload_file_and_enqueue(file, camera_id, author_id)
-    return {"video_id": video_id}
+    return video_id
 
 
 @router.get("/")
@@ -27,10 +27,6 @@ async def get_videos(
     pagination: PaginationParams = Depends(),
     video_service: VideoService = Depends(get_video_service)
 ):
-    videos, total_count = await video_service.list_videos(filters=video_params, pagination=pagination)
-    return {
-        "videos": videos,
-        "total_count": total_count,
-        "pagination": pagination.to_dict()
-    }
+    videos = await video_service.list_videos(filters=video_params, pagination=pagination)
+    return videos
     

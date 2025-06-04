@@ -22,7 +22,13 @@ class VideoService:
         filters: Optional[VideoFiltersDTO],
         pagination: Optional[PaginationParams]
     ) -> Tuple[List[VideoDomain], int]:
-        return await self._repo.list_all(filters=filters, pagination=pagination)
+        videos, total_count = await self._repo.list_all(filters=filters, pagination=pagination)
+        return {
+            "videos": videos,
+            "total_count": total_count,
+            "pagination": pagination.to_dict()
+        }
+
 
     async def create_video(self, dto: CreateVideoDTO) -> VideoDomain:
         new_video = VideoDomain(
