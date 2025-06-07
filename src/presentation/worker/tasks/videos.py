@@ -3,10 +3,7 @@ import asyncio
 from pathlib import Path
 from uuid import UUID
 
-
 from pika.adapters.asyncio_connection import AsyncioConnection
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
 from src.infrastructure.data.postgres.repositories.video_repository import PostgresVideoRepository
@@ -14,7 +11,7 @@ from src.shared_kernel.config import config
 from src.infrastructure.data.minio.base import minio_client
 from src.infrastructure.data.postgres.base import AsyncSessionMaker
 from src.infrastructure.data.rabbitmq.base import RABBIT_PARAMS
-from src.application.video.dto.enums import TracingStatus
+from src.shared_kernel.application.enums import TracingStatus
 
 
 asyncio_conn: AsyncioConnection | None = None

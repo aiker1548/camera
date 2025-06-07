@@ -4,9 +4,10 @@ from typing import List, Optional
 from src.application.camera.interfaces.persistence.repo import AbstractCameraRepository
 from src.domain.camera.entities.camera import Camera
 from src.application.camera.dto.filters import CameraFilters
+from src.application.camera.interfaces.persistence.service import AbstractCameraService
 
 
-class CameraService:
+class CameraService(AbstractCameraService):
     def __init__(self, repository: AbstractCameraRepository):
         self.repository = repository
 

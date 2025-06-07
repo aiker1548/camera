@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
 
-from src.application.video.dto.enums import TimeOfDay, TracingStatus
+from src.shared_kernel.application.enums import TimeOfDay, TracingStatus
 from src.infrastructure.data.postgres.base import Base
 
 

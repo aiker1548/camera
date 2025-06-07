@@ -4,7 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 from fastapi import Query
 
-from src.application.video.dto.enums import TimeOfDay, TracingStatus
+from src.shared_kernel.application.enums import TimeOfDay, TracingStatus
 
 class VideoFiltersDTO(BaseModel):
     date_from: Optional[datetime] = Field(None, description="Дата начала")

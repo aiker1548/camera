@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from uuid import UUID
 
 from src.application.camera.dto.camera import CameraCreate, CameraRead, CameraUpdate
-from src.application.camera.service.service import CameraService
+from src.application.camera.interfaces.persistence.service import AbstractCameraService
 from src.domain.camera.entities.camera import Camera
 from src.presentation.api.routes.camera.dependencies.camera_dep import get_service
 from src.presentation.api.routes.camera.cameras_paramns  import FilterCamerasParams
@@ -13,7 +13,7 @@ router = APIRouter(tags=["Cameras"])
 @router.get("/geojson", response_model=dict)
 async def get_cameras_geojson(
     filter_params: FilterCamerasParams = Depends(),
-    service: CameraService = Depends(get_service)
+    service: AbstractCameraService = Depends(get_service)
 ):
     
     filters = filter_params.build_camera_filters()
@@ -21,7 +21,7 @@ async def get_cameras_geojson(
 
 
 @router.get("/{camera_id}", response_model=CameraRead)
-async def get_camera(camera_id: UUID, service: CameraService = Depends(get_service)):
+async def get_camera(camera_id: UUID, service: AbstractCameraService = Depends(get_service)):
     camera = await service.get_camera(camera_id)
     if not camera:
         raise HTTPException(status_code=404, detail="Camera not found")
@@ -30,7 +30,7 @@ async def get_camera(camera_id: UUID, service: CameraService = Depends(get_servi
 
 
 @router.post("/", response_model=CameraRead, status_code=201)
-async def create_camera(data: CameraCreate, service: CameraService = Depends(get_service)):
+async def create_camera(data: CameraCreate, service: AbstractCameraService = Depends(get_service)):
     camera = Camera(
         camera_id=data.camera_id,
         camera_class_cd=data.camera_class_cd,
@@ -52,7 +52,7 @@ async def create_camera(data: CameraCreate, service: CameraService = Depends(get
 
 
 @router.delete("/{camera_id}", status_code=204)
-async def delete_camera(camera_id: UUID, service: CameraService = Depends(get_service)):
+async def delete_camera(camera_id: UUID, service: AbstractCameraService = Depends(get_service)):
     await service.delete_camera(camera_id)
 
 
@@ -61,7 +61,7 @@ async def delete_camera(camera_id: UUID, service: CameraService = Depends(get_se
 async def update_camera(
     camera_id: UUID,
     data: CameraUpdate,
-    service: CameraService = Depends(get_service)
+    service: AbstractCameraService = Depends(get_service)
 ):
     camera = await service.get_camera(camera_id)
     if not camera:

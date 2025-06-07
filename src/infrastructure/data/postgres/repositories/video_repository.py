@@ -11,7 +11,7 @@ from src.infrastructure.data.postgres.models.video import Video as VideoModel
 from src.infrastructure.data.postgres.models.VideoProcessingQueue import VideoProcessingQueue
 from src.application.video.dto.video_filters import VideoFiltersDTO
 from src.application.video.dto.pagination import PaginationParams
-from src.application.video.dto.enums import TimeOfDay, TracingStatus
+from src.shared_kernel.application.enums import TimeOfDay, TracingStatus
 from src.shared_kernel.config import config
 
 

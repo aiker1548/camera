@@ -7,10 +7,11 @@ from src.application.video.dto.video_filters import VideoFiltersDTO
 from src.application.video.dto.pagination import PaginationParams
 from src.domain.video.entities.video import Video as VideoDomain
 from src.application.video.dto.video import CreateVideoDTO
-from src.application.video.dto.enums import TimeOfDay, TracingStatus
+from src.shared_kernel.application.enums import TimeOfDay, TracingStatus
+from src.application.video.interfaces.service import AbstractVideoService
 
 
-class VideoService:
+class VideoService(AbstractVideoService):
     def __init__(self, repository: AbstractVideoRepository):
         self._repo = repository
 

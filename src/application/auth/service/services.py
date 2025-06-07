@@ -9,13 +9,12 @@ from src.infrastructure.services.jwt_provider import (
     create_refresh_token,
     decode_token,
 )
-from src.infrastructure.data.postgres.repositories.user_repository import UserRepository
 from src.application.auth.dto.auth_dto import UserCreate
 from src.application.auth.dto.token_dto import TokenPair, TokenRefresh
-
+from src.application.auth.interfaces.service import AbstractAuthService
 #from src.shared.messaging.producer import send_event
 
-class AuthService:
+class AuthService(AbstractAuthService):
     """
     Сервис аутентификации и управления пользователями.
     """
@@ -23,8 +22,7 @@ class AuthService:
         self,
         user_repo: IUserRepository = None
     ):
-        self.user_repo: IUserRepository = user_repo or UserRepository()
-
+        self.user_repo: IUserRepository = user_repo
     async def register(self, dto: UserCreate) -> None:
         # Проверим, что пользователя с таким email ещё нет
         existing_user = await self.user_repo.get_by_email(dto.email)

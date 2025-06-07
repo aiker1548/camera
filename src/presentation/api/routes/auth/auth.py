@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from src.application.auth.service.services import AuthService
+from src.application.auth.interfaces.service import AbstractAuthService
 from src.application.auth.dto.auth_dto import UserCreate, LoginRequest
 from src.application.auth.dto.token_dto import TokenPair, TokenRefresh
 from src.presentation.api.routes.auth.dependencies.auth_dep import get_auth_service
@@ -11,7 +11,7 @@ router = APIRouter()
 @router.post("/register", status_code=201)
 async def register(
     user: UserCreate,
-    service: AuthService = Depends(get_auth_service)
+    service: AbstractAuthService = Depends(get_auth_service)
 ):
     try:
         await service.register(user)
@@ -22,7 +22,7 @@ async def register(
 @router.post("/login", response_model=TokenPair)
 async def login(
     data: LoginRequest,
-    service: AuthService = Depends(get_auth_service)
+    service: AbstractAuthService = Depends(get_auth_service)
 ):
     try:
         return await service.login(data.email, data.password)
@@ -32,7 +32,7 @@ async def login(
 @router.post("/refresh", response_model=TokenPair)
 async def refresh(
     data: TokenRefresh,
-    service: AuthService = Depends(get_auth_service)
+    service: AbstractAuthService = Depends(get_auth_service)
 ):
     try:
         return await service.refresh(data)

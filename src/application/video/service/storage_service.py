@@ -8,16 +8,17 @@ from pika import BasicProperties as PikaBasicProperties
 import json
 
 from src.application.video.dto.video import CreateVideoDTO
-from src.application.video.service.service import VideoService
-from src.application.video.dto.enums import TracingStatus
+from src.shared_kernel.application.enums import TracingStatus
 from src.shared_kernel.config import config
+from src.application.video.interfaces.service import AbstractVideoService
+from src.application.video.interfaces.storage_service import AbstractVideoStorageService
 
-class VideoStorageService:
+class VideoStorageService(AbstractVideoStorageService):
     def __init__(
         self,
         minio_client: Minio,
         rabbit_channel: PikaChannel,
-        video_service: VideoService
+        video_service: AbstractVideoService
     ):
         self._minio = minio_client
         self._rabbit_channel = rabbit_channel

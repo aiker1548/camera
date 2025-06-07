@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from pydantic import BaseModel, Field
 
-from src.application.video.dto.enums import TimeOfDay, TracingStatus
+from src.shared_kernel.application.enums import TimeOfDay, TracingStatus
 
 
 class CreateVideoDTO(BaseModel):
